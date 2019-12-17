@@ -1,0 +1,1 @@
+export const myBar = () => "I am BAR";

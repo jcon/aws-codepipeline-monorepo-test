@@ -1,0 +1,14 @@
+{
+    "name": "@meetup/bar",
+    "version": "0.0.0",
+    "description": "Meetup bar",
+    "main": "dist/index",
+    "license": "MIT",
+    "private": true,
+    "scripts": {
+      "build": "tsc --build"
+    },
+    "devDependencies": {
+      "@types/node": "^12.12.14"
+    }
+  }

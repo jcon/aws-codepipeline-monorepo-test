@@ -1,0 +1,19 @@
+{
+    "name": "@meetup/main2",
+    "version": "1.0.0",
+    "description": "Meetup main2",
+    "main": "dist/index",
+    "license": "MIT",
+    "private": true,
+    "scripts": {
+        "build": "tsc --build",
+        "start": "node ./dist/index.js"
+    },
+    "dependencies": {
+        "@meetup/foo": "^0.0.0",
+        "@meetup/bar": "^0.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^12.12.14"
+    }
+  }
