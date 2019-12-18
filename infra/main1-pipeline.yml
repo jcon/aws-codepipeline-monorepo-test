@@ -72,20 +72,20 @@ Resources:
                     - 'yarn install'
               build:
                   commands:
-                    - 'cd packages/main1 && yarn build'
+                    - 'cd packages/main1'
+                    - 'yarn build'
               post_build:
                   commands:
                     - 'echo sucessfully pushed artifacts!'
           artifacts:
-              base-directory: public
+              base-directory: .
               files:
-                - '**/*'
+                - '**/dist/*'
+                - '**/node_modules/*'
               discard-paths: no
           cache:
               paths:
-                - '.cache/*'
                 - 'node_modules/*'
-                - 'public/*'
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/standard:2.0
