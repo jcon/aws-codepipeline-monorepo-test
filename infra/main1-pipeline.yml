@@ -72,7 +72,7 @@ Resources:
                     - 'yarn install'
               build:
                   commands:
-                    - 'yarn build'
+                    - 'cd packages/main1 && yarn build'
               post_build:
                   commands:
                     - 'echo sucessfully pushed artifacts!'
