@@ -1,0 +1,25 @@
+version: 0.1
+phases:
+    install:
+        commands:
+            - 'touch .npmignore'
+            - 'npm install -g gatsby'
+    pre_build:
+        commands:
+            - 'yarn install'
+    build:
+        commands:
+            - 'yarn build build'
+    post_build:
+        commands:
+            - 'echo sucessfully deployed!'
+artifacts:
+    base-directory: public
+    files:
+        - '**/*'
+    discard-paths: no
+cache:
+    paths:
+        - '.cache/*'
+        - 'node_modules/*'
+        - 'public/*'
