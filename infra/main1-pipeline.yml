@@ -65,7 +65,7 @@ Resources:
         Type: S3
         Location: !Ref 'ArtifactsBucket'
         Name: 'build-output.zip'
-        NamespaceType: BUILD_ID
+        NamespaceType: NONE # BUILD_ID (we want to use the same file each time)
         Packaging: ZIP
         Path: 'codebuild'
       Source:
@@ -80,12 +80,6 @@ Resources:
               install:
                   runtime-versions:
                     nodejs: 10
-                  commands:
-                    - 'touch .npmignore'
-                    - 'npm install -g yarn'
-              pre_build:
-                  commands:
-                    - 'yarn install'
               build:
                   commands:
                     - 'echo doing nothing'
@@ -97,9 +91,9 @@ Resources:
               files:
                 - '**/*'
               discard-paths: no
-          cache:
-              paths:
-                - 'node_modules/*'
+#          cache:
+#              paths:
+#                - 'node_modules/*'
       Triggers:
         Webhook: true
         FilterGroups:
@@ -119,9 +113,9 @@ Resources:
             Value: !Ref AWS::Region
       Name: !Sub "${AWS::StackName}-trigger"
       ServiceRole: !Ref CodeBuildServiceRole
-      Cache:
-        Type: S3
-        Location: !Ref CacheBucket
+#      Cache:
+#        Type: S3
+#        Location: !Ref CacheBucket
 
   ArtifactBucketPolicy:
     Description: Setting Amazon S3 bucket policy for AWS CodePipeline access
@@ -220,6 +214,7 @@ Resources:
                     - 'yarn install'
               build:
                   commands:
+                    - 'find . -type f'
                     - 'cd packages/main1'
                     - 'yarn build'
               post_build:
@@ -231,9 +226,9 @@ Resources:
                 - '**/dist/*'
                 - '**/node_modules/*'
               discard-paths: no
-          cache:
-              paths:
-                - 'node_modules/*'
+#          cache:
+#              paths:
+#                - 'node_modules/*'
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/standard:2.0
@@ -244,9 +239,9 @@ Resources:
             Value: !Ref AWS::Region
       Name: !Ref AWS::StackName
       ServiceRole: !Ref CodeBuildServiceRole
-      Cache:
-        Type: S3
-        Location: !Ref CacheBucket
+#      Cache:
+#        Type: S3
+#        Location: !Ref CacheBucket
 
   CodePipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -259,22 +254,35 @@ Resources:
       Stages:
       - Name: Source
         Actions:
-        - Name: Source
-          InputArtifacts: []
+        - Name: SourceAction
           ActionTypeId:
             Category: Source
-            Owner: ThirdParty
+            Owner: AWS
             Version: 1
-            Provider: GitHub
+            Provider: S3
           OutputArtifacts:
           - Name: SourceCode
           Configuration:
-            Owner: !Ref GitHubOwner
-            Repo: !Ref GitHubRepo
-            Branch: !Ref GitHubBranch
-            PollForSourceChanges: false
-            OAuthToken: !Ref GitHubOAuthToken
+            S3Bucket: !Ref ArtifactsBucket
+            S3ObjectKey: codebuild/build-output.zip
+            PollForSourceChanges: true
           RunOrder: 1
+        # - Name: Source
+        #   InputArtifacts: []
+        #   ActionTypeId:
+        #     Category: Source
+        #     Owner: ThirdParty
+        #     Version: 1
+        #     Provider: GitHub
+        #   OutputArtifacts:
+        #   - Name: SourceCode
+        #   Configuration:
+        #     Owner: !Ref GitHubOwner
+        #     Repo: !Ref GitHubRepo
+        #     Branch: !Ref GitHubBranch
+        #     PollForSourceChanges: false
+        #     OAuthToken: !Ref GitHubOAuthToken
+        #   RunOrder: 1
       # Build and Deploy, etc., stages would follow. Here is an example
       - Name: Build
         Actions:
@@ -312,19 +320,19 @@ Resources:
   # 'GithubWebhook' satisfies two requirements:
   # -- Means that updates are pushed from GitHub, rather than AWS having to poll
   # -- Means we can filter for required changes
-  GithubWebhook:
-    Type: 'AWS::CodePipeline::Webhook'
-    Properties:
-      Authentication: GITHUB_HMAC
-      AuthenticationConfiguration:
-        SecretToken: !Ref GitHubOAuthToken
-      RegisterWithThirdParty: true
-      Filters:
-      - JsonPath: "$.ref"
-        MatchEquals: refs/heads/{Branch}
-      TargetPipeline: !Ref CodePipeline
-      TargetAction: Source
-      TargetPipelineVersion: !GetAtt CodePipeline.Version
+#  GithubWebhook:
+#    Type: 'AWS::CodePipeline::Webhook'
+#    Properties:
+#      Authentication: GITHUB_HMAC
+#      AuthenticationConfiguration:
+#        SecretToken: !Ref GitHubOAuthToken
+#      RegisterWithThirdParty: true
+#      Filters:
+#      - JsonPath: "$.ref"
+#        MatchEquals: refs/heads/{Branch}
+#      TargetPipeline: !Ref CodePipeline
+#      TargetAction: Source
+#      TargetPipelineVersion: !GetAtt CodePipeline.Version
 
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
