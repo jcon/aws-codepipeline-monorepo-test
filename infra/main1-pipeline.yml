@@ -24,7 +24,7 @@ Parameters:
 
   GitHubRepo:
     Type: String
-    Default: cicd-test
+    Default: aws-codepipeline-monorepo-test
     AllowedPattern: "[A-Za-z0-9-]+"
 
   GitHubBranch:
@@ -82,7 +82,7 @@ Resources:
                     nodejs: 10
               build:
                   commands:
-                    - 'echo doing nothing'
+                    - 'echo doing nothing.'
               post_build:
                   commands:
                     - 'echo sucessfully pushed artifacts!'

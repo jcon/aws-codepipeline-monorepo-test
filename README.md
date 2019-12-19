@@ -1,4 +1,5 @@
 A proof of concept exploring monorepo builds in CodeBuild / CodeDeploy from a GitHub repository.
+This repository builds off the ideas described in this [blog post](https://blog.codecentric.de/en/2019/05/codebuild-trigger-pipeline/), but implements them in CloudFormation.
 
 # Instructions
 
