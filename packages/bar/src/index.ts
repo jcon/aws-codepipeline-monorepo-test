@@ -1,1 +1,1 @@
-export const myBar = () => "I am BAR";
+export const myBar = () => "I am BAR (v2)";
