@@ -45,10 +45,158 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
 
-  ArtifactBucket:
-    Type: AWS::S3::Bucket
+#  ArtifactBucket:
+#    Type: AWS::S3::Bucket
 
   CacheBucket:
+    Type: AWS::S3::Bucket
+
+  CodeBuildSourceCredential:
+    Type: AWS::CodeBuild::SourceCredential
+    Properties:
+      AuthType: PERSONAL_ACCESS_TOKEN
+      ServerType: GITHUB
+      Token: !Ref GitHubOAuthToken
+
+  PipelineTriggerCodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: S3
+        Location: !Ref 'ArtifactsBucket'
+        Name: 'build-output.zip'
+        NamespaceType: BUILD_ID
+        Packaging: ZIP
+        Path: 'codebuild'
+      Source:
+        Type: GITHUB
+        Location: https://github.com/jcon/cicd-test.git
+        Auth:
+          Type: OAUTH
+          Resource: !Ref CodeBuildSourceCredential
+        BuildSpec: |
+          version: 0.2
+          phases:
+              install:
+                  runtime-versions:
+                    nodejs: 10
+                  commands:
+                    - 'touch .npmignore'
+                    - 'npm install -g yarn'
+              pre_build:
+                  commands:
+                    - 'yarn install'
+              build:
+                  commands:
+                    - 'echo doing nothing'
+              post_build:
+                  commands:
+                    - 'echo sucessfully pushed artifacts!'
+          artifacts:
+              base-directory: .
+              files:
+                - '**/*'
+              discard-paths: no
+          cache:
+              paths:
+                - 'node_modules/*'
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: PUSH
+#            - Type: BASE_REF
+#              Pattern: ^refs/heads/master$
+            - Type: FILE_PATH
+              Pattern: ^(packages/bar|packages/baz|packages/main1).*$
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:2.0
+        Type: LINUX_CONTAINER
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: AWS_DEFAULT_REGION
+            Value: !Ref AWS::Region
+      Name: !Sub "${AWS::StackName}-trigger"
+      ServiceRole: !Ref CodeBuildServiceRole
+      Cache:
+        Type: S3
+        Location: !Ref CacheBucket
+
+  ArtifactBucketPolicy:
+    Description: Setting Amazon S3 bucket policy for AWS CodePipeline access
+    Properties:
+      Bucket: !Ref 'ArtifactsBucket'
+      PolicyDocument:
+        Id: SSEAndSSLPolicy
+        Statement:
+        - Action:
+          - s3:GetObject
+          - s3:GetObjectVersion
+          - s3:GetBucketVersioning
+          Condition:
+            Bool:
+              aws:SecureTransport: false
+          Effect: Allow
+          Principal:
+            AWS:
+            - !GetAtt
+              - CodePipelineRole
+              - Arn
+            - !GetAtt
+              - CodeBuildServiceRole
+              - Arn
+            - !GetAtt
+              - CloudformationRole
+              - Arn
+          Resource:
+          - !Join
+            - ''
+            - - 'arn:aws:s3:::'
+              - !Ref 'ArtifactsBucket'
+          - !Join
+            - ''
+            - - 'arn:aws:s3:::'
+              - !Ref 'ArtifactsBucket'
+              - /*
+          Sid: WhitelistedGet
+        - Action:
+          - s3:PutObject
+          Effect: Allow
+          Principal:
+            AWS:
+            - !GetAtt
+              - CodePipelineRole
+              - Arn
+            - !GetAtt
+              - CodeBuildServiceRole
+              - Arn
+          Resource:
+          - !Join
+            - ''
+            - - 'arn:aws:s3:::'
+              - !Ref 'ArtifactsBucket'
+          - !Join
+            - ''
+            - - 'arn:aws:s3:::'
+              - !Ref 'ArtifactsBucket'
+              - /*
+          Sid: WhitelistedPut
+        Version: 2012-10-17
+    Type: AWS::S3::BucketPolicy
+
+  ArtifactsBucket:
+    DeletionPolicy: Delete
+    Description: Creating Amazon S3 bucket for AWS CodePipeline and CodeBuild artifacts
+    Properties:
+      Tags:
+      - Key: Name
+        Value: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - ArtifactsBucket
+      VersioningConfiguration:
+        Status: Enabled
     Type: AWS::S3::Bucket
 
   CodeBuildProject:
