@@ -70,7 +70,7 @@ Resources:
         Path: 'codebuild'
       Source:
         Type: GITHUB
-        Location: https://github.com/jcon/cicd-test.git
+        Location: !Sub "https://github.com/${GitHubOwner}/${GitHubRepo}.git"
         Auth:
           Type: OAUTH
           Resource: !Ref CodeBuildSourceCredential
