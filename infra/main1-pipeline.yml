@@ -214,11 +214,11 @@ Resources:
                     - 'yarn install'
               build:
                   commands:
-                    - 'find . -type f'
                     - 'cd packages/main1'
                     - 'yarn build'
               post_build:
                   commands:
+                    - 'node ./dist/index.js'
                     - 'echo sucessfully pushed artifacts!'
           artifacts:
               base-directory: .
