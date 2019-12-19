@@ -102,7 +102,7 @@ Resources:
 #            - Type: BASE_REF
 #              Pattern: ^refs/heads/master$
             - Type: FILE_PATH
-              Pattern: ^(packages/bar|packages/baz|packages/main1).*$
+              Pattern: ^(packages/bar|packages/foo|packages/main1).*$
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/standard:2.0
